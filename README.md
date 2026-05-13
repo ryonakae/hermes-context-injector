@@ -9,7 +9,7 @@ It is useful when another process maintains a compact context file, such as a da
 ```text
 [context file]
    ↓ read before eligible LLM turns
-[system_prompt from config.yaml]
+[system_prompt from local config.yaml]
    +
 [truncated context file]
    ↓ returned as {"context": "..."}
@@ -42,7 +42,13 @@ Restart Hermes, or restart the gateway if you use messaging platforms.
 
 ## Configuration
 
-Edit `config.yaml` in the plugin directory.
+Copy the example config and edit the local file:
+
+```bash
+cp config.example.yaml config.yaml
+```
+
+`config.yaml` is intentionally ignored by git so local paths, platform choices, and sender IDs do not end up in the public repository.
 
 ```yaml
 context_path: ~/.hermes/live-contexts/current.md

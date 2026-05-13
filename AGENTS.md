@@ -5,7 +5,7 @@ This repository is a Hermes Agent standalone plugin. Start with these files:
 - `plugin.yaml` — plugin metadata and hook declaration
 - `__init__.py` — thin plugin loader/export surface
 - `context_injector.py` — hook implementation, config loading, cadence, state handling
-- `config.yaml` — example/default plugin-local configuration
+- `config.example.yaml` — tracked example configuration; copy it to ignored `config.yaml` for local runtime settings
 - `tests/test_context_injector.py` — behavior tests
 - `.hermes/plans/` — implementation plans and review notes
 
@@ -46,8 +46,8 @@ PY
 
 ## Config and runtime notes
 
-- Public config file: `config.yaml`.
-- Legacy `config.json` may be read as a migration fallback, but `config.yaml` wins.
+- Public example config file: `config.example.yaml`; local runtime config file: ignored `config.yaml`.
+- Legacy `config.json` may be read as a migration fallback, but local `config.yaml` wins.
 - Legacy `state_path` must be ignored.
 - `system_prompt` is plugin terminology for the instruction prepended inside the injected context block, not a Hermes/model system message.
 - Cadence defaults should avoid every-turn injection: first eligible turn, then every configured number of eligible turns or minutes.

@@ -1,3 +1,4 @@
+config.yaml
 state.json
 *.tmp.*
 __pycache__/
