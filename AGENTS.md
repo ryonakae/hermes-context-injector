@@ -50,6 +50,10 @@ PY
 - Legacy `config.json` may be read as a migration fallback, but local `config.yaml` wins.
 - Legacy `state_path` must be ignored.
 - `system_prompt` is plugin terminology for the instruction prepended inside the injected context block, not a Hermes/model system message.
+- Platform access lives under `platforms.<platform>.enabled` and `platforms.<platform>.allowed_sender_ids`.
+- Keep `config.example.yaml` aligned with Hermes core platform keys: `cli`, `cron`, `local`, `telegram`, `discord`, `whatsapp`, `slack`, `signal`, `mattermost`, `matrix`, `homeassistant`, `email`, `sms`, `dingtalk`, `api_server`, `webhook`, `msgraph_webhook`, `feishu`, `wecom`, `wecom_callback`, `weixin`, `bluebubbles`, `qqbot`, `yuanbao`.
+- `allowed_sender_ids` is platform-scoped. Empty means all senders on that enabled platform; non-empty means the hook `sender_id` must match one of the configured IDs.
+- Legacy `enabled_platforms` and flat `allowed_sender_ids` are migration fallback only; do not document them as the preferred config shape.
 - Cadence defaults should avoid every-turn injection: first eligible turn, then every configured number of eligible turns or minutes.
 
 ## Migration notes

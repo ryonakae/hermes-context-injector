@@ -1,13 +1,94 @@
 # Path to the markdown/text file injected into Hermes conversations.
 context_path: ~/.hermes/live-contexts/current.md
 
-# Platforms where injection is enabled. Empty list means disabled.
-enabled_platforms:
-  - cli
-
-# Optional sender allowlist for gateway platforms. CLI ignores this.
-# Slack examples: U123EXAMPLE or <@U123EXAMPLE>
-allowed_sender_ids: []
+# Platform access is explicit and platform-scoped.
+# Hermes core currently uses these platform keys in pre_llm_call:
+# - cli, cron
+# - local, telegram, discord, whatsapp, slack, signal, mattermost, matrix
+# - homeassistant, email, sms, dingtalk, api_server, webhook, msgraph_webhook
+# - feishu, wecom, wecom_callback, weixin, bluebubbles, qqbot, yuanbao
+#
+# enabled: true enables injection for that platform.
+# allowed_sender_ids is optional. Empty means any sender on that enabled platform.
+# For gateway platforms, the sender ID is Hermes SessionSource.user_id.
+# Examples:
+# - Slack: U123EXAMPLE or <@U123EXAMPLE>
+# - Discord: 123456789012345678
+# - Telegram: 123456789
+# - Email/SMS/Signal/WhatsApp/iMessage-style platforms often use address/phone/JID-like IDs.
+platforms:
+  cli:
+    enabled: true
+    allowed_sender_ids: []
+  cron:
+    enabled: false
+    allowed_sender_ids: []
+  local:
+    enabled: false
+    allowed_sender_ids: []
+  telegram:
+    enabled: false
+    allowed_sender_ids: []
+  discord:
+    enabled: false
+    allowed_sender_ids: []
+  whatsapp:
+    enabled: false
+    allowed_sender_ids: []
+  slack:
+    enabled: false
+    allowed_sender_ids: []
+  signal:
+    enabled: false
+    allowed_sender_ids: []
+  mattermost:
+    enabled: false
+    allowed_sender_ids: []
+  matrix:
+    enabled: false
+    allowed_sender_ids: []
+  homeassistant:
+    enabled: false
+    allowed_sender_ids: []
+  email:
+    enabled: false
+    allowed_sender_ids: []
+  sms:
+    enabled: false
+    allowed_sender_ids: []
+  dingtalk:
+    enabled: false
+    allowed_sender_ids: []
+  api_server:
+    enabled: false
+    allowed_sender_ids: []
+  webhook:
+    enabled: false
+    allowed_sender_ids: []
+  msgraph_webhook:
+    enabled: false
+    allowed_sender_ids: []
+  feishu:
+    enabled: false
+    allowed_sender_ids: []
+  wecom:
+    enabled: false
+    allowed_sender_ids: []
+  wecom_callback:
+    enabled: false
+    allowed_sender_ids: []
+  weixin:
+    enabled: false
+    allowed_sender_ids: []
+  bluebubbles:
+    enabled: false
+    allowed_sender_ids: []
+  qqbot:
+    enabled: false
+    allowed_sender_ids: []
+  yuanbao:
+    enabled: false
+    allowed_sender_ids: []
 
 session_state_ttl_hours: 168
 max_context_chars: 12000

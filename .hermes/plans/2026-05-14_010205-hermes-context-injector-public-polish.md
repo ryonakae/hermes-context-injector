@@ -3,6 +3,30 @@
 Created: 2026-05-14 01:02 JST
 Target: `/Users/ryo.nakae/.hermes/plugins/live-context-injector`
 
+## Platform allowlist follow-up (2026-05-14)
+
+Hermes core was re-checked before widening the public config shape:
+
+- Built-in gateway platform enum values in `gateway/config.py`: `local`, `telegram`, `discord`, `whatsapp`, `slack`, `signal`, `mattermost`, `matrix`, `homeassistant`, `email`, `sms`, `dingtalk`, `api_server`, `webhook`, `msgraph_webhook`, `feishu`, `wecom`, `wecom_callback`, `weixin`, `bluebubbles`, `qqbot`, `yuanbao`.
+- `run_agent.py` invokes `pre_llm_call` with `platform=getattr(self, "platform", None) or ""` and `sender_id=getattr(self, "_user_id", None) or ""`.
+- `gateway/run.py` constructs gateway agents with `platform=source.platform.value` and `user_id=source.user_id`, so gateway sender allowlisting is based on `SessionSource.user_id`.
+- CLI uses `platform="cli"`; cron-created agents use `platform="cron"`.
+
+Decision: the public config should use platform-scoped access rules:
+
+```yaml
+platforms:
+  cli:
+    enabled: true
+    allowed_sender_ids: []
+  slack:
+    enabled: false
+    allowed_sender_ids:
+      - U123EXAMPLE
+```
+
+Flat legacy `enabled_platforms` / `allowed_sender_ids` remains accepted as a migration fallback only. New docs and `config.example.yaml` should show every known Hermes platform key and explain that an empty per-platform sender list means all senders on that enabled platform.
+
 ## Goal
 
 Turn the current local `live-context-injector` plugin into a more generally reusable/public-ready Hermes plugin named `hermes-context-injector`.

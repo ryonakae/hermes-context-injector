@@ -39,8 +39,7 @@ def current_text():
 def make_config(plugin, plugin_dir: Path, context_path: Path, **overrides):
     base = {
         "context_path": str(context_path),
-        "enabled_platforms": ["cli"],
-        "allowed_sender_ids": [],
+        "platforms": {"cli": {"enabled": True}},
         "session_state_ttl_hours": 168,
         "max_context_chars": 12000,
         "system_prompt": "Use this context carefully.",
@@ -151,7 +150,7 @@ def test_platform_disabled_and_sender_mismatch_do_not_advance_cadence(tmp_path):
     plugin = load_plugin()
     current = tmp_path / "current.md"
     current.write_text(current_text(), encoding="utf-8")
-    cfg = make_config(plugin, tmp_path, current, enabled_platforms=["slack"], allowed_sender_ids=["U123EXAMPLE"])
+    cfg = make_config(plugin, tmp_path, current, platforms={"slack": {"enabled": True, "allowed_sender_ids": ["U123EXAMPLE"]}})
     hook = plugin.make_hook(cfg, plugin_dir=tmp_path, clock=now_at(datetime(2026, 1, 1, tzinfo=timezone.utc)))
 
     assert hook(platform="cli", session_id="s1", sender_id="") is None
@@ -160,6 +159,90 @@ def test_platform_disabled_and_sender_mismatch_do_not_advance_cadence(tmp_path):
     state_path = tmp_path / "state.json"
     state = json.loads(state_path.read_text(encoding="utf-8"))
     assert state.get("sessions", {}) == {}
+
+
+def test_normalizes_platform_access_for_all_builtin_platform_names(tmp_path):
+    plugin = load_plugin()
+
+    cfg = plugin.normalize_config(
+        {
+            "platforms": {
+                "CLI": True,
+                "slack": {"enabled": True, "allowed_sender_ids": ["<@U123EXAMPLE>"]},
+                "api-server": {"enabled": False},
+                "msgraph-webhook": {"enabled": True, "allowed_sender_ids": ["user@example.com"]},
+            }
+        },
+        plugin_dir=tmp_path,
+    )
+
+    assert set(plugin.SUPPORTED_PLATFORM_KEYS) >= {
+        "cli",
+        "cron",
+        "local",
+        "telegram",
+        "discord",
+        "whatsapp",
+        "slack",
+        "signal",
+        "mattermost",
+        "matrix",
+        "homeassistant",
+        "email",
+        "sms",
+        "dingtalk",
+        "api_server",
+        "webhook",
+        "msgraph_webhook",
+        "feishu",
+        "wecom",
+        "wecom_callback",
+        "weixin",
+        "bluebubbles",
+        "qqbot",
+        "yuanbao",
+    }
+    assert cfg["platforms"]["cli"]["enabled"] is True
+    assert cfg["platforms"]["slack"]["allowed_sender_ids"] == ["U123EXAMPLE"]
+    assert cfg["platforms"]["api_server"]["enabled"] is False
+    assert cfg["platforms"]["msgraph_webhook"]["allowed_sender_ids"] == ["user@example.com"]
+
+
+def test_sender_allowlist_is_scoped_per_platform(tmp_path):
+    plugin = load_plugin()
+    current = tmp_path / "current.md"
+    current.write_text(current_text(), encoding="utf-8")
+    cfg = make_config(
+        plugin,
+        tmp_path,
+        current,
+        platforms={
+            "slack": {"enabled": True, "allowed_sender_ids": ["U123EXAMPLE"]},
+            "discord": {"enabled": True, "allowed_sender_ids": ["D123EXAMPLE"]},
+        },
+    )
+    hook = plugin.make_hook(cfg, plugin_dir=tmp_path, clock=now_at(datetime(2026, 1, 1, tzinfo=timezone.utc)))
+
+    assert hook(platform="slack", session_id="s1", sender_id="<@U123EXAMPLE>")
+    assert hook(platform="discord", session_id="s2", sender_id="U123EXAMPLE") is None
+    assert hook(platform="discord", session_id="s3", sender_id="D123EXAMPLE")
+
+
+def test_legacy_enabled_platforms_and_flat_sender_allowlist_still_work(tmp_path):
+    plugin = load_plugin()
+    current = tmp_path / "current.md"
+    current.write_text(current_text(), encoding="utf-8")
+    cfg = plugin.normalize_config(
+        {
+            "context_path": str(current),
+            "enabled_platforms": ["slack", "api-server"],
+            "allowed_sender_ids": ["U123EXAMPLE"],
+        },
+        plugin_dir=tmp_path,
+    )
+
+    assert cfg["platforms"]["slack"] == {"enabled": True, "allowed_sender_ids": ["U123EXAMPLE"]}
+    assert cfg["platforms"]["api_server"] == {"enabled": True, "allowed_sender_ids": ["U123EXAMPLE"]}
 
 
 def test_cadence_first_turn_skip_turn_threshold_time_threshold_and_changed_hash(tmp_path):
@@ -280,6 +363,6 @@ def test_malformed_yaml_and_invalid_numbers_fail_safe(tmp_path):
 
     cfg = plugin.load_config(plugin_dir=tmp_path)
 
-    assert cfg["enabled_platforms"] == ["cli"]
+    assert cfg["platforms"]["cli"]["enabled"] is True
     assert cfg["max_context_chars"] == 12000
     assert cfg["injection"]["reinject_after_turns"] == 6

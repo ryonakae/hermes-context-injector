@@ -53,10 +53,18 @@ cp config.example.yaml config.yaml
 ```yaml
 context_path: ~/.hermes/live-contexts/current.md
 
-enabled_platforms:
-  - cli
-
-allowed_sender_ids: []
+platforms:
+  cli:
+    enabled: true
+    allowed_sender_ids: []
+  slack:
+    enabled: false
+    allowed_sender_ids:
+      - U123EXAMPLE
+  discord:
+    enabled: false
+    allowed_sender_ids:
+      - "123456789012345678"
 
 session_state_ttl_hours: 168
 max_context_chars: 12000
@@ -76,6 +84,19 @@ system_prompt: |
 wrapper:
   tag: hermes_context
 ```
+
+`config.example.yaml` lists every built-in Hermes platform key found in Hermes core:
+
+```text
+cli, cron, local, telegram, discord, whatsapp, slack, signal, mattermost,
+matrix, homeassistant, email, sms, dingtalk, api_server, webhook,
+msgraph_webhook, feishu, wecom, wecom_callback, weixin, bluebubbles,
+qqbot, yuanbao
+```
+
+`allowed_sender_ids` is scoped per platform. Empty means “all senders on this enabled platform.” For gateway platforms, Hermes passes `SessionSource.user_id` to the hook as `sender_id`; examples include Slack user IDs (`U123EXAMPLE`), Discord snowflakes, Telegram numeric user IDs, email addresses, phone numbers, or platform-specific JID/open-id style identifiers.
+
+Legacy `enabled_platforms` and flat `allowed_sender_ids` are still accepted as a migration fallback, but new configs should use `platforms.<name>.enabled` and `platforms.<name>.allowed_sender_ids`.
 
 ### Injection cadence
 

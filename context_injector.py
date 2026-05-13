@@ -15,10 +15,36 @@ Distinguish facts, estimates, and uncertainty.
 If it conflicts with the user's latest message, prefer the user's latest message.
 Only use it when it is naturally relevant."""
 
+SUPPORTED_PLATFORM_KEYS = (
+    "cli",
+    "cron",
+    "local",
+    "telegram",
+    "discord",
+    "whatsapp",
+    "slack",
+    "signal",
+    "mattermost",
+    "matrix",
+    "homeassistant",
+    "email",
+    "sms",
+    "dingtalk",
+    "api_server",
+    "webhook",
+    "msgraph_webhook",
+    "feishu",
+    "wecom",
+    "wecom_callback",
+    "weixin",
+    "bluebubbles",
+    "qqbot",
+    "yuanbao",
+)
+
 DEFAULT_CONFIG: dict[str, Any] = {
     "context_path": "~/.hermes/live-contexts/current.md",
-    "enabled_platforms": ["cli"],
-    "allowed_sender_ids": [],
+    "platforms": {"cli": {"enabled": True, "allowed_sender_ids": []}},
     "session_state_ttl_hours": 168,
     "max_context_chars": 12000,
     "system_prompt": DEFAULT_SYSTEM_PROMPT,
@@ -75,8 +101,7 @@ def normalize_config(data: dict[str, Any] | None, plugin_dir: Path | None = None
 
     return {
         "context_path": _resolve_path(_string_or_default(context_value, DEFAULT_CONFIG["context_path"]), plugin_dir),
-        "enabled_platforms": _string_list_or_default(raw.get("enabled_platforms"), DEFAULT_CONFIG["enabled_platforms"]),
-        "allowed_sender_ids": _string_list_or_default(raw.get("allowed_sender_ids"), DEFAULT_CONFIG["allowed_sender_ids"]),
+        "platforms": _normalize_platforms_config(raw),
         "session_state_ttl_hours": _positive_int_or_default(
             raw.get("session_state_ttl_hours"), DEFAULT_CONFIG["session_state_ttl_hours"]
         ),
@@ -104,8 +129,7 @@ def make_hook(
     plugin_dir = Path(plugin_dir or Path(__file__).resolve().parent)
     current_path = Path(config.get("context_path", _resolve_path(DEFAULT_CONFIG["context_path"], plugin_dir)))
     state_path = Path(state_path or plugin_dir / "state.json")
-    enabled_platforms = set(config.get("enabled_platforms", []))
-    allowed_sender_ids = {_normalize_sender_id(value) for value in config.get("allowed_sender_ids", [])}
+    platform_access = config.get("platforms") if isinstance(config.get("platforms"), dict) else {}
     session_state_ttl_hours = int(config.get("session_state_ttl_hours", DEFAULT_CONFIG["session_state_ttl_hours"]))
     max_context_chars = int(config.get("max_context_chars", DEFAULT_CONFIG["max_context_chars"]))
     system_prompt = str(config.get("system_prompt", DEFAULT_CONFIG["system_prompt"]))
@@ -117,14 +141,16 @@ def make_hook(
     clock = clock or (lambda: datetime.now(timezone.utc))
 
     def hook(**kwargs):
-        platform = kwargs.get("platform") or ""
+        platform = _normalize_platform_name(kwargs.get("platform") or "")
         session_id = kwargs.get("session_id") or "unknown"
         sender_id = _normalize_sender_id(kwargs.get("sender_id") or "")
+        access = platform_access.get(platform, {"enabled": False, "allowed_sender_ids": []})
+        allowed_sender_ids = set(access.get("allowed_sender_ids") or []) if isinstance(access, dict) else set()
 
-        if platform not in enabled_platforms:
+        if not isinstance(access, dict) or not access.get("enabled"):
             _debug(state_path, "skipped_platform", platform=platform, session_id=session_id)
             return None
-        if platform != "cli" and allowed_sender_ids and sender_id not in allowed_sender_ids:
+        if allowed_sender_ids and sender_id not in allowed_sender_ids:
             _debug(state_path, "skipped_sender", platform=platform, session_id=session_id)
             return None
         if not current_path.exists():
@@ -200,6 +226,45 @@ def _should_inject(
     if now - last_injected_at >= timedelta(minutes=reinject_after_minutes):
         return True, 0
     return False, current_turns
+
+
+def _normalize_platforms_config(raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    configured = raw.get("platforms")
+    if isinstance(configured, dict):
+        result: dict[str, dict[str, Any]] = {}
+        for key, value in configured.items():
+            platform = _normalize_platform_name(key)
+            if not platform:
+                continue
+            if isinstance(value, dict):
+                enabled = bool(value.get("enabled", False))
+                allowed = _normalize_sender_id_list(value.get("allowed_sender_ids", value.get("allowed_user_ids", [])))
+            else:
+                enabled = bool(value)
+                allowed = []
+            result[platform] = {"enabled": enabled, "allowed_sender_ids": allowed}
+        return result
+
+    enabled_platforms = _string_list_or_default(raw.get("enabled_platforms"), list(DEFAULT_CONFIG["platforms"].keys()))
+    flat_allowed = _normalize_sender_id_list(raw.get("allowed_sender_ids", []))
+    return {
+        platform: {"enabled": True, "allowed_sender_ids": [] if platform in {"cli", "cron", "local"} else flat_allowed}
+        for platform in (_normalize_platform_name(item) for item in enabled_platforms)
+        if platform
+    }
+
+
+def _normalize_platform_name(value: Any) -> str:
+    return str(value or "").strip().lower().replace("-", "_")
+
+
+def _normalize_sender_id_list(value: Any) -> list[str]:
+    normalized = []
+    for item in _string_list_or_default(value, []):
+        sender = _normalize_sender_id(item)
+        if sender:
+            normalized.append(sender)
+    return normalized
 
 
 def _normalize_sender_id(value: Any) -> str:
