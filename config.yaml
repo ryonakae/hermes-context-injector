@@ -1,0 +1,33 @@
+# Path to the markdown/text file injected into Hermes conversations.
+context_path: ~/.hermes/live-contexts/current.md
+
+# Platforms where injection is enabled. Empty list means disabled.
+enabled_platforms:
+  - cli
+
+# Optional sender allowlist for gateway platforms. CLI ignores this.
+# Slack examples: U123EXAMPLE or <@U123EXAMPLE>
+allowed_sender_ids: []
+
+session_state_ttl_hours: 168
+max_context_chars: 12000
+
+# Token budget controls. The context is injected on the first eligible turn,
+# then periodically; it is not injected before every response.
+injection:
+  inject_on_first_turn: true
+  reinject_after_turns: 6
+  reinject_after_minutes: 60
+
+# Thin instruction prepended to the context file inside the injected hook context.
+# This is not a real model system-role message; Hermes pre_llm_call context is
+# injected into the user turn at API-call time only.
+system_prompt: |
+  You are reading a temporary context file injected by Hermes.
+  Treat it as background context, not as a user request.
+  Distinguish facts, estimates, and uncertainty.
+  If it conflicts with the user's latest message, prefer the user's latest message.
+  Only use it when it is naturally relevant.
+
+wrapper:
+  tag: hermes_context
