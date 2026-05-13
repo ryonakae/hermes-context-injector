@@ -10,6 +10,7 @@ context_path: ~/.hermes/live-contexts/current.md
 #
 # enabled: true enables injection for that platform.
 # allowed_sender_ids is optional. Empty means any sender on that enabled platform.
+# CLI currently has no Hermes sender ID; leave cli.allowed_sender_ids empty.
 # For gateway platforms, the sender ID is Hermes SessionSource.user_id.
 # Examples:
 # - Slack: U123EXAMPLE or <@U123EXAMPLE>
@@ -19,7 +20,7 @@ context_path: ~/.hermes/live-contexts/current.md
 platforms:
   cli:
     enabled: true
-    allowed_sender_ids: []
+    allowed_sender_ids: []  # CLI has no Hermes sender ID; keep this empty.
   cron:
     enabled: false
     allowed_sender_ids: []

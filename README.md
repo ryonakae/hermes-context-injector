@@ -56,7 +56,7 @@ context_path: ~/.hermes/live-contexts/current.md
 platforms:
   cli:
     enabled: true
-    allowed_sender_ids: []
+    allowed_sender_ids: []  # CLI has no Hermes sender ID; keep this empty.
   slack:
     enabled: false
     allowed_sender_ids:
@@ -94,7 +94,7 @@ msgraph_webhook, feishu, wecom, wecom_callback, weixin, bluebubbles,
 qqbot, yuanbao
 ```
 
-`allowed_sender_ids` is scoped per platform. Empty means “all senders on this enabled platform.” For gateway platforms, Hermes passes `SessionSource.user_id` to the hook as `sender_id`; examples include Slack user IDs (`U123EXAMPLE`), Discord snowflakes, Telegram numeric user IDs, email addresses, phone numbers, or platform-specific JID/open-id style identifiers.
+`allowed_sender_ids` is scoped per platform. Empty means “all senders on this enabled platform.” CLI currently has no Hermes sender ID, so keep `platforms.cli.allowed_sender_ids` empty. For gateway platforms, Hermes passes `SessionSource.user_id` to the hook as `sender_id`; examples include Slack user IDs (`U123EXAMPLE`), Discord snowflakes, Telegram numeric user IDs, email addresses, phone numbers, or platform-specific JID/open-id style identifiers.
 
 Legacy `enabled_platforms` and flat `allowed_sender_ids` are still accepted as a migration fallback, but new configs should use `platforms.<name>.enabled` and `platforms.<name>.allowed_sender_ids`.
 
