@@ -96,6 +96,12 @@ qqbot, yuanbao
 
 `allowed_sender_ids` is scoped per platform. Empty means “all senders on this enabled platform.” CLI currently has no Hermes sender ID, so keep `platforms.cli.allowed_sender_ids` empty. For gateway platforms, Hermes passes `SessionSource.user_id` to the hook as `sender_id`; examples include Slack user IDs (`U123EXAMPLE`), Discord snowflakes, Telegram numeric user IDs, email addresses, phone numbers, or platform-specific JID/open-id style identifiers.
 
+The non-chat-looking keys are Hermes runtime surfaces, not extra messaging apps:
+
+- `cli` is ordinary interactive Hermes CLI usage.
+- `cron` is Hermes scheduled-job execution. Keep it disabled unless scheduled jobs should receive this injected context too.
+- `local` is Hermes' local-machine session source, used internally for local/file-oriented sessions. It is not an external gateway adapter like Slack or Telegram, and most users can leave it disabled.
+
 Legacy `enabled_platforms` and flat `allowed_sender_ids` are still accepted as a migration fallback, but new configs should use `platforms.<name>.enabled` and `platforms.<name>.allowed_sender_ids`.
 
 ### Injection cadence

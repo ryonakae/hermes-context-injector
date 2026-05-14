@@ -11,6 +11,9 @@ context_path: ./context.md
 #
 # enabled: true enables injection for that platform.
 # allowed_sender_ids is optional. Empty means any sender on that enabled platform.
+# cli is the ordinary interactive Hermes CLI surface.
+# cron is Hermes scheduled-job execution; leave disabled unless scheduled jobs should see this context.
+# local is Hermes' local-machine session source, not an external messaging adapter.
 # CLI currently has no Hermes sender ID; leave cli.allowed_sender_ids empty.
 # For gateway platforms, the sender ID is Hermes SessionSource.user_id.
 # Examples:
