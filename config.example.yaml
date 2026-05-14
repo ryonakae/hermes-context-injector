@@ -98,7 +98,7 @@ max_context_chars: 12000
 # then periodically; it is not injected before every response.
 injection:
   inject_on_first_turn: true
-  reinject_after_turns: 6
+  reinject_after_turns: 10
   reinject_after_minutes: 60
 
 # Thin instruction prepended to the context file inside the injected hook context.
