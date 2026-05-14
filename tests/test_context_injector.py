@@ -168,6 +168,7 @@ def test_normalizes_platform_access_for_all_builtin_platform_names(tmp_path):
         {
             "platforms": {
                 "CLI": True,
+                "local": {"enabled": True},
                 "slack": {"enabled": True, "allowed_sender_ids": ["<@U123EXAMPLE>"]},
                 "api-server": {"enabled": False},
                 "msgraph-webhook": {"enabled": True, "allowed_sender_ids": ["user@example.com"]},
@@ -179,7 +180,6 @@ def test_normalizes_platform_access_for_all_builtin_platform_names(tmp_path):
     assert set(plugin.SUPPORTED_PLATFORM_KEYS) >= {
         "cli",
         "cron",
-        "local",
         "telegram",
         "discord",
         "whatsapp",
@@ -203,6 +203,7 @@ def test_normalizes_platform_access_for_all_builtin_platform_names(tmp_path):
         "yuanbao",
     }
     assert cfg["platforms"]["cli"]["enabled"] is True
+    assert cfg["platforms"]["local"]["enabled"] is True
     assert cfg["platforms"]["slack"]["allowed_sender_ids"] == ["U123EXAMPLE"]
     assert cfg["platforms"]["api_server"]["enabled"] is False
     assert cfg["platforms"]["msgraph_webhook"]["allowed_sender_ids"] == ["user@example.com"]

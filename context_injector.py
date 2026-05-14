@@ -18,7 +18,6 @@ Only use it when it is naturally relevant."""
 SUPPORTED_PLATFORM_KEYS = (
     "cli",
     "cron",
-    "local",
     "telegram",
     "discord",
     "whatsapp",

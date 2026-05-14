@@ -5,7 +5,7 @@ context_path: ./context.md
 # Platform access is explicit and platform-scoped.
 # Hermes core currently uses these platform keys in pre_llm_call:
 # - cli, cron
-# - local, telegram, discord, whatsapp, slack, signal, mattermost, matrix
+# - telegram, discord, whatsapp, slack, signal, mattermost, matrix
 # - homeassistant, email, sms, dingtalk, api_server, webhook, msgraph_webhook
 # - feishu, wecom, wecom_callback, weixin, bluebubbles, qqbot, yuanbao
 #
@@ -13,7 +13,6 @@ context_path: ./context.md
 # allowed_sender_ids is optional. Empty means any sender on that enabled platform.
 # cli is the ordinary interactive Hermes CLI surface.
 # cron is Hermes scheduled-job execution; leave disabled unless scheduled jobs should see this context.
-# local is Hermes' local-machine session source, not an external messaging adapter.
 # CLI currently has no Hermes sender ID; leave cli.allowed_sender_ids empty.
 # For gateway platforms, the sender ID is Hermes SessionSource.user_id.
 # Examples:
@@ -26,9 +25,6 @@ platforms:
     enabled: true
     allowed_sender_ids: []  # CLI has no Hermes sender ID; keep this empty.
   cron:
-    enabled: false
-    allowed_sender_ids: []
-  local:
     enabled: false
     allowed_sender_ids: []
   telegram:
