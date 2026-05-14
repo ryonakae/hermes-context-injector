@@ -1,5 +1,6 @@
 # Path to the markdown/text file injected into Hermes conversations.
-context_path: ~/.hermes/live-contexts/current.md
+# Relative paths are resolved from this plugin directory.
+context_path: ./context.md
 
 # Platform access is explicit and platform-scoped.
 # Hermes core currently uses these platform keys in pre_llm_call:

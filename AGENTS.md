@@ -47,6 +47,7 @@ PY
 ## Config and runtime notes
 
 - Public example config file: `config.example.yaml`; local runtime config file: ignored `config.yaml`.
+- `context_path` may point at any local markdown/text file. Relative paths are resolved from the plugin directory.
 - Legacy `config.json` may be read as a migration fallback, but local `config.yaml` wins.
 - Legacy `state_path` must be ignored.
 - `system_prompt` is plugin terminology for the instruction prepended inside the injected context block, not a Hermes/model system message.
@@ -55,15 +56,3 @@ PY
 - `allowed_sender_ids` is platform-scoped. Empty means all senders on that enabled platform; non-empty means the hook `sender_id` must match one of the configured IDs. CLI currently has no Hermes sender ID, so `platforms.cli.allowed_sender_ids` should stay empty.
 - Legacy `enabled_platforms` and flat `allowed_sender_ids` are migration fallback only; do not document them as the preferred config shape.
 - Cadence defaults should avoid every-turn injection: first eligible turn, then every configured number of eligible turns or minutes.
-
-## Migration notes
-
-When renaming or activating locally, use disable → rename → enable:
-
-1. Remove `live-context-injector` from `~/.hermes/config.yaml` `plugins.enabled`.
-2. Rename the directory and `plugin.yaml` name to `hermes-context-injector`.
-3. Add only `hermes-context-injector` to `plugins.enabled`.
-4. Run tests and plugin discovery smoke.
-5. Restart the gateway only when ready to activate the changed plugin.
-
-Never enable both old and new plugin names at the same time; that can double-inject context.

@@ -54,3 +54,31 @@ def test_example_config_lists_every_supported_platform():
     data = yaml.safe_load((root / "config.example.yaml").read_text(encoding="utf-8"))
 
     assert set(data["platforms"]) == set(plugin.SUPPORTED_PLATFORM_KEYS)
+
+
+def test_tracked_files_do_not_use_runtime_source_branding():
+    tracked = git("ls-files")
+    assert tracked.returncode == 0, tracked.stderr
+
+    forbidden_terms = (
+        "live" + "-context",
+        "live" + "_context",
+        "live" + " context",
+        "live" + "-contexts",
+        "hermes_" + "live" + "_context",
+        "HERMES_" + "LIVE" + "_CONTEXT",
+    )
+    offenders = []
+    root = repo_root()
+    for relative in tracked.stdout.splitlines():
+        path = root / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        lower_text = text.lower()
+        for term in forbidden_terms:
+            if term.lower() in lower_text:
+                offenders.append(f"{relative}: {term}")
+
+    assert offenders == []

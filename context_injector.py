@@ -43,7 +43,7 @@ SUPPORTED_PLATFORM_KEYS = (
 )
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "context_path": "~/.hermes/live-contexts/current.md",
+    "context_path": "./context.md",
     "platforms": {"cli": {"enabled": True, "allowed_sender_ids": []}},
     "session_state_ttl_hours": 168,
     "max_context_chars": 12000,

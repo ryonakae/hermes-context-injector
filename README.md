@@ -48,10 +48,10 @@ Copy the example config and edit the local file:
 cp config.example.yaml config.yaml
 ```
 
-`config.yaml` is intentionally ignored by git so local paths, platform choices, and sender IDs do not end up in the public repository.
+`config.yaml` is intentionally ignored by git so local paths, platform choices, and sender IDs do not end up in the public repository. Relative `context_path` values are resolved from the plugin directory.
 
 ```yaml
-context_path: ~/.hermes/live-contexts/current.md
+context_path: ./context.md
 
 platforms:
   cli:

@@ -33,7 +33,7 @@ def now_at(value: datetime):
 
 
 def current_text():
-    return "# Hermes live context\n\nbody\n\n## 詳細参照\n- weather.md\n"
+    return "# Hermes context\n\nbody\n\n## 詳細参照\n- weather.md\n"
 
 
 def make_config(plugin, plugin_dir: Path, context_path: Path, **overrides):
@@ -81,7 +81,7 @@ injection:
     assert result
     context = result["context"]
     assert context.startswith("<custom_context>\nYou are reading a context file.")
-    assert context.index("Use it only when relevant.") < context.index("# Hermes live context")
+    assert context.index("Use it only when relevant.") < context.index("# Hermes context")
     assert context.endswith("</custom_context>")
     assert (tmp_path / "state.json").exists()
 
@@ -141,7 +141,7 @@ def test_legacy_config_json_loads_but_state_path_is_ignored(tmp_path):
     result = hook(platform="cli", session_id="s1", sender_id="")
 
     assert result
-    assert "# Hermes live context" in result["context"]
+    assert "# Hermes context" in result["context"]
     assert (tmp_path / "state.json").exists()
     assert not forbidden_state.exists()
 
