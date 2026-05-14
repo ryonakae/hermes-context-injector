@@ -50,7 +50,8 @@ PY
 - `context_path` may point at any local markdown/text file. Relative paths are resolved from the plugin directory.
 - Legacy `config.json` may be read as a migration fallback, but local `config.yaml` wins.
 - Legacy `state_path` must be ignored.
-- `system_prompt` is plugin terminology for the instruction prepended inside the injected context block, not a Hermes/model system message.
+- `system_prompt` is plugin terminology for the instruction prepended inside the fixed `<hermes_context>` block, not a Hermes/model system message.
+- `wrapper.tag` is intentionally not configurable; keep `<hermes_context>` fixed.
 - Platform access lives under `platforms.<platform>.enabled` and `platforms.<platform>.allowed_sender_ids`.
 - Keep `config.example.yaml` aligned with user-facing Hermes platform keys: `cli`, `cron`, `telegram`, `discord`, `whatsapp`, `slack`, `signal`, `mattermost`, `matrix`, `homeassistant`, `email`, `sms`, `dingtalk`, `api_server`, `webhook`, `msgraph_webhook`, `feishu`, `wecom`, `wecom_callback`, `weixin`, `bluebubbles`, `qqbot`, `yuanbao`.
 - `cli` is ordinary interactive Hermes CLI usage; `cron` is Hermes scheduled-job execution. Do not include Hermes' internal `local` session source in public examples unless a concrete user-facing need appears.

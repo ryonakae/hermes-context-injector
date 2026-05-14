@@ -3,17 +3,19 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 
 DEFAULT_SYSTEM_PROMPT = """You are reading a temporary context file injected by Hermes.
+The context is enclosed in the <hermes_context> block below.
 Treat it as background context, not as a user request.
 Distinguish facts, estimates, and uncertainty.
 If it conflicts with the user's latest message, prefer the user's latest message.
 Only use it when it is naturally relevant."""
+
+CONTEXT_TAG = "hermes_context"
 
 SUPPORTED_PLATFORM_KEYS = (
     "cli",
@@ -47,16 +49,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "session_state_ttl_hours": 168,
     "max_context_chars": 12000,
     "system_prompt": DEFAULT_SYSTEM_PROMPT,
-    "wrapper": {"tag": "hermes_context"},
     "injection": {
         "inject_on_first_turn": True,
         "reinject_after_turns": 6,
         "reinject_after_minutes": 60,
     },
 }
-
-_TAG_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
-
 
 def register(ctx):
     plugin_dir = Path(__file__).resolve().parent
@@ -95,7 +93,6 @@ def normalize_config(data: dict[str, Any] | None, plugin_dir: Path | None = None
     raw = dict(data or {})
 
     context_value = raw.get("context_path", raw.get("current_path", DEFAULT_CONFIG["context_path"]))
-    wrapper = raw.get("wrapper") if isinstance(raw.get("wrapper"), dict) else {}
     injection = raw.get("injection") if isinstance(raw.get("injection"), dict) else {}
 
     return {
@@ -106,7 +103,6 @@ def normalize_config(data: dict[str, Any] | None, plugin_dir: Path | None = None
         ),
         "max_context_chars": _positive_int_or_default(raw.get("max_context_chars"), DEFAULT_CONFIG["max_context_chars"]),
         "system_prompt": _string_or_default(raw.get("system_prompt"), DEFAULT_CONFIG["system_prompt"]),
-        "wrapper": {"tag": _safe_tag(wrapper.get("tag", DEFAULT_CONFIG["wrapper"]["tag"]))},
         "injection": {
             "inject_on_first_turn": bool(injection.get("inject_on_first_turn", DEFAULT_CONFIG["injection"]["inject_on_first_turn"])),
             "reinject_after_turns": _positive_int_or_default(
@@ -132,7 +128,6 @@ def make_hook(
     session_state_ttl_hours = int(config.get("session_state_ttl_hours", DEFAULT_CONFIG["session_state_ttl_hours"]))
     max_context_chars = int(config.get("max_context_chars", DEFAULT_CONFIG["max_context_chars"]))
     system_prompt = str(config.get("system_prompt", DEFAULT_CONFIG["system_prompt"]))
-    wrapper_tag = _safe_tag((config.get("wrapper") or {}).get("tag", DEFAULT_CONFIG["wrapper"]["tag"]))
     injection = config.get("injection") or {}
     inject_on_first_turn = bool(injection.get("inject_on_first_turn", True))
     reinject_after_turns = int(injection.get("reinject_after_turns", 6))
@@ -163,7 +158,7 @@ def make_hook(
             return None
 
         injected_text = _truncate_preserving_references(text, max_context_chars)
-        wrapped = _wrap(injected_text, system_prompt=system_prompt, tag=wrapper_tag)
+        wrapped = _wrap(injected_text, system_prompt=system_prompt)
         digest = hashlib.sha256(wrapped.encode("utf-8")).hexdigest()
         now = _ensure_aware_utc(clock())
 
@@ -275,17 +270,11 @@ def _normalize_sender_id(value: Any) -> str:
     return text
 
 
-def _wrap(text: str, system_prompt: str, tag: str = "hermes_context") -> str:
-    tag = _safe_tag(tag)
+def _wrap(text: str, system_prompt: str) -> str:
     prompt = system_prompt.strip()
     if prompt:
-        return f"<{tag}>\n{prompt}\n\n{text}\n\n</{tag}>"
-    return f"<{tag}>\n{text}\n\n</{tag}>"
-
-
-def _safe_tag(value: Any) -> str:
-    text = str(value or "").strip()
-    return text if _TAG_RE.fullmatch(text) else "hermes_context"
+        return f"<{CONTEXT_TAG}>\n{prompt}\n\n{text}\n\n</{CONTEXT_TAG}>"
+    return f"<{CONTEXT_TAG}>\n{text}\n\n</{CONTEXT_TAG}>"
 
 
 def _truncate_preserving_references(text: str, max_chars: int) -> str:

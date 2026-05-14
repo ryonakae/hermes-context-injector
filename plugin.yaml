@@ -1,5 +1,5 @@
 name: hermes-context-injector
-version: 0.2.0
+version: 0.3.0
 description: Injects a configurable context file into Hermes conversations via pre_llm_call.
 kind: standalone
 provides_hooks:

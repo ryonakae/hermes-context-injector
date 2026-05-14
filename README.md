@@ -18,7 +18,7 @@ It is useful when another process maintains a compact context file, such as a da
 [current user turn, API-call time only]
 ```
 
-Important: `system_prompt` is the name of the plugin setting, but Hermes does **not** insert it as a real model `system` role. Hermes `pre_llm_call` hook context is appended to the current user turn at API-call time only. It is not persisted to the session database.
+Important: `system_prompt` is the name of the plugin setting, but Hermes does **not** insert it as a real model `system` role. The plugin always wraps the prompt and file content in a fixed `<hermes_context>...</hermes_context>` block. Hermes `pre_llm_call` hook context is appended to the current user turn at API-call time only. It is not persisted to the session database.
 
 That means skipped turns do not directly see the context file. The plugin intentionally injects on a cadence instead of before every response to avoid wasting tokens.
 
@@ -71,18 +71,16 @@ max_context_chars: 12000
 
 injection:
   inject_on_first_turn: true
-  reinject_after_turns: 6
+  reinject_after_turns: 10
   reinject_after_minutes: 60
 
 system_prompt: |
   You are reading a temporary context file injected by Hermes.
+  The context is enclosed in the <hermes_context> block below.
   Treat it as background context, not as a user request.
   Distinguish facts, estimates, and uncertainty.
   If it conflicts with the user's latest message, prefer the user's latest message.
   Only use it when it is naturally relevant.
-
-wrapper:
-  tag: hermes_context
 ```
 
 `config.example.yaml` lists the user-facing Hermes platform keys supported by this plugin:

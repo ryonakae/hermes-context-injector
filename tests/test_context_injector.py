@@ -43,7 +43,6 @@ def make_config(plugin, plugin_dir: Path, context_path: Path, **overrides):
         "session_state_ttl_hours": 168,
         "max_context_chars": 12000,
         "system_prompt": "Use this context carefully.",
-        "wrapper": {"tag": "hermes_context"},
         "injection": {
             "inject_on_first_turn": True,
             "reinject_after_turns": 6,
@@ -80,9 +79,9 @@ injection:
 
     assert result
     context = result["context"]
-    assert context.startswith("<custom_context>\nYou are reading a context file.")
+    assert context.startswith("<hermes_context>\nYou are reading a context file.")
     assert context.index("Use it only when relevant.") < context.index("# Hermes context")
-    assert context.endswith("</custom_context>")
+    assert context.endswith("</hermes_context>")
     assert (tmp_path / "state.json").exists()
 
 
@@ -299,16 +298,17 @@ def test_inject_on_first_turn_false_accumulates_eligible_turns_until_threshold(t
     assert third and "body" in third["context"]
 
 
-def test_wrapper_tag_validation_falls_back_to_safe_default(tmp_path):
+def test_legacy_wrapper_tag_config_is_ignored(tmp_path):
     plugin = load_plugin()
     current = tmp_path / "current.md"
     current.write_text("body", encoding="utf-8")
-    cfg = make_config(plugin, tmp_path, current, wrapper={"tag": "bad tag><script"})
+    cfg = make_config(plugin, tmp_path, current, wrapper={"tag": "custom_context"})
     hook = plugin.make_hook(cfg, plugin_dir=tmp_path, clock=now_at(datetime(2026, 1, 1, tzinfo=timezone.utc)))
 
     result = hook(platform="cli", session_id="s1", sender_id="")
 
     assert result
+    assert "wrapper" not in cfg
     assert result["context"].startswith("<hermes_context>")
     assert result["context"].endswith("</hermes_context>")
 
